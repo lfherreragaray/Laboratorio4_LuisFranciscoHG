@@ -1,0 +1,65 @@
+@startuml
+actor Usuario
+participant "Main" as Main
+participant "SimulationEngine" as Engine
+participant "ParkState" as State
+participant "ArrivalZone" as Arrival
+participant "CentralHub" as Hub
+participant "BathroomZone" as Bath
+participant "ObservationEnclosure" as Enclosure
+participant "PowerPlant" as Plant
+participant "EventScheduler" as Scheduler
+participant "Guard" as Guard
+participant "Technician" as Tech
+participant "CsvWriter" as CSV
+
+Usuario -> Main: java -jar
+Main -> Engine: new SimulationEngine(config)
+Main -> Engine: run()
+
+loop for step = 0 to totalSteps-1
+    Engine -> State: incrementStep()
+    Engine -> Arrival: processBatch(batchSize, csvWriter)
+    Arrival --> CSV: appendRevenue()
+    Engine -> State: addRevenue()
+    
+    Engine -> State: getActiveTourists()
+    loop for each active tourist
+        Engine -> Hub: visit(tourist, rng, csvWriter)
+        Hub --> CSV: appendRevenue()
+        Engine -> Bath: tryEnter(tourist, rng, csvWriter)
+        Bath --> CSV: appendRevenue()
+        Engine -> Enclosure: visit(tourist, rng, csvWriter)
+        Enclosure --> CSV: appendRevenue()
+    end
+    
+    Engine -> Bath: tick()
+    Engine -> Plant: tick(rng, csvWriter)
+    Plant --> CSV: appendExpense() (if failure)
+    
+    Engine -> Scheduler: checkForEvent(step)
+    alt event present
+        Scheduler --> Engine: SimulationEvent
+        Engine -> event: execute(state, rng)
+        event --> State: modify (escape, attack, failure, etc.)
+        event --> CSV: appendEvent()
+        event --> CSV: appendExpense()
+    end
+    
+    Engine -> Guard: recaptureEscapedDinosaurs(dinosaurs)
+    Engine -> Tech: repairIfNeeded(plant)
+    Tech -> Plant: repair()
+    Plant --> Tech: ok
+    Tech --> CSV: appendExpense() (repair cost)
+    
+    Engine -> State: getWorkers()
+    loop for each worker
+        Engine -> CSV: appendExpense(salary)
+    end
+    
+    Engine -> ParkMonitor: displaySnapshot(state)
+    ParkMonitor --> Console: print metrics
+end
+
+Engine -> Console: print final summary
+@enduml
