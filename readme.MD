@@ -31,4 +31,4 @@ Compila las fuentes Java y verifica dependencias.
 ## Diagramas UML
 
 ### Diagrama de secuencia – Bucle principal de simulación
-![Secuencia del bucle](docs/diagrams/Bucle principal de simulación.png)
+![Secuencia del bucle](out/doc/diagram/Bucle-principal-de-simulacion/Bucle-principal-de-simulacion.png)
